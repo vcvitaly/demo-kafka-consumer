@@ -1,9 +1,18 @@
+server:
+  port: 8081
+
 kafka:
   consumer:
     topic: topic1
+    id: test
 
 spring:
   kafka:
     consumer:
-      value-deserializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*"
+      auto-offset-reset: earliest
     bootstrap-servers: localhost:9094

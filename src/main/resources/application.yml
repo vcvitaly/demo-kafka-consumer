@@ -1,0 +1,9 @@
+kafka:
+  consumer:
+    topic: topic1
+
+spring:
+  kafka:
+    consumer:
+      value-deserializer: org.springframework.kafka.support.serializer.JsonSerializer
+    bootstrap-servers: localhost:9094

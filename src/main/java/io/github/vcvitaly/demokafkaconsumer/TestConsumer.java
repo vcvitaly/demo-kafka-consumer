@@ -5,6 +5,7 @@ import io.github.vcvitaly.producercommon.TestDto;
 import io.github.vcvitaly.producercommon.TestType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
@@ -24,17 +25,15 @@ public class TestConsumer {
     private final Map<Integer, String> db = new ConcurrentHashMap<>();
     private final LongAdder adderCreated = new LongAdder();
     private final LongAdder adderUpdated = new LongAdder();
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Random rand = new Random();
 
     public TestConsumer() {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::printStats, 0, 10, TimeUnit.SECONDS);
     }
 
-    @KafkaListener(id = "${kafka.consumer.id}", topics = "${kafka.consumer.topic}")
-    public void listen(@Payload String s) {
+    @KafkaListener(topics = "${kafka.consumer.topic}", containerFactory = "testFactory")
+    public void listen(@Payload TestDto testDto, Acknowledgment ack) {
         try {
-            TestDto testDto = objectMapper.readValue(s, TestDto.class);
             if (Objects.requireNonNull(testDto.type()) == TestType.CREATE) {
                 run(() -> create(testDto.id(), testDto.data()));
             } else if (testDto.type() == TestType.UPDATE) {
@@ -43,6 +42,8 @@ public class TestConsumer {
         } catch (Exception e) {
             log.error("Error: ", e);
             throw new RuntimeException(e);
+        } finally {
+            ack.acknowledge();
         }
     }
 
@@ -56,9 +57,10 @@ public class TestConsumer {
     }
 
     private void create(Integer id, String data) {
-        db.put(id, data);
+        /*db.put(id, data);
         sleep(rand);
-        adderCreated.increment();
+        adderCreated.increment();*/
+        throw new RuntimeException("Oops");
     }
 
     private void update(Integer id, String data) {

@@ -1,6 +1,5 @@
 package io.github.vcvitaly.demokafkaconsumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.vcvitaly.producercommon.TestDto;
 import io.github.vcvitaly.producercommon.TestType;
 import lombok.extern.slf4j.Slf4j;
@@ -31,23 +30,23 @@ public class TestConsumer {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::printStats, 0, 10, TimeUnit.SECONDS);
     }
 
-    @KafkaListener(topics = "${kafka.consumer.topic}", containerFactory = "testFactory")
-    public void listen(@Payload TestDto testDto, Acknowledgment ack) {
+    @KafkaListener(id = "${kafka.consumer.containerName}", topics = "${kafka.consumer.topic}", autoStartup = "false")
+    public void listen(String msg) {
         try {
+            final TestDto testDto = JsonUtil.toObject(msg, TestDto.class);
             if (Objects.requireNonNull(testDto.type()) == TestType.CREATE) {
                 runVoid(() -> create(testDto.id(), testDto.data()));
             } else if (testDto.type() == TestType.UPDATE) {
-                run(() -> update(testDto.id(), testDto.data()));
+                runAsync(() -> update(testDto.id(), testDto.data()));
             }
         } catch (Exception e) {
             log.error("Error: ", e);
-            throw new RuntimeException(e);
-        } finally {
+        }/* finally {
             ack.acknowledge();
-        }
+        }*/
     }
 
-    private CompletableFuture<Void> run(Runnable r) {
+    private CompletableFuture<Void> runAsync(Runnable r) {
         return CompletableFuture.runAsync(r)
                 .whenComplete((res, e) -> {
                     if (e != null) {
@@ -58,14 +57,15 @@ public class TestConsumer {
     }
 
     private void runVoid(Runnable r) {
-        throw new SomeTestException("Oops");
+        r.run();
     }
 
     private void create(Integer id, String data) {
         /*db.put(id, data);
         sleep(rand);
         adderCreated.increment();*/
-        throw new SomeTestException("Oops");
+//        throw new SomeTestException("Oops");
+        log.info("[id=%d, data=%s]".formatted(id, data));
     }
 
     private void update(Integer id, String data) {

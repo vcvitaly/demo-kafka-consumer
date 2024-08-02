@@ -6,7 +6,8 @@ kafka:
   bootstrap-servers: localhost:9092
   consumer:
     topic: topic1
-    id: test
+    groupId: test.consumer
+    containerName: testContainer
 
 #logging:
 #  level:

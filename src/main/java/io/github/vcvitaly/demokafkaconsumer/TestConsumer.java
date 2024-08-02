@@ -35,7 +35,7 @@ public class TestConsumer {
     public void listen(@Payload TestDto testDto, Acknowledgment ack) {
         try {
             if (Objects.requireNonNull(testDto.type()) == TestType.CREATE) {
-                run(() -> create(testDto.id(), testDto.data()));
+                runVoid(() -> create(testDto.id(), testDto.data()));
             } else if (testDto.type() == TestType.UPDATE) {
                 run(() -> update(testDto.id(), testDto.data()));
             }
@@ -52,15 +52,20 @@ public class TestConsumer {
                 .whenComplete((res, e) -> {
                     if (e != null) {
                         log.error("Error while running: ", e);
+                        throw new RuntimeException(e);
                     }
                 });
+    }
+
+    private void runVoid(Runnable r) {
+        throw new SomeTestException("Oops");
     }
 
     private void create(Integer id, String data) {
         /*db.put(id, data);
         sleep(rand);
         adderCreated.increment();*/
-        throw new RuntimeException("Oops");
+        throw new SomeTestException("Oops");
     }
 
     private void update(Integer id, String data) {

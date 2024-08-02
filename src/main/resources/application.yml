@@ -1,8 +1,13 @@
 server:
   port: 8081
 
+
 kafka:
   bootstrap-servers: localhost:9092
   consumer:
     topic: topic1
     id: test
+
+#logging:
+#  level:
+#    org.apache.kafka: DEBUG
